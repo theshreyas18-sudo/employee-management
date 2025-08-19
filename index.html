@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Management</title>
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#1f2937;       /* gray-800 */
+      --muted-2:#374151;     /* gray-700 */
+      --text:#e5e7eb;        /* gray-200 */
+      --text-dim:#cbd5e1;    /* slate-300 */
+      --accent:#22c55e;      /* green-500 */
+      --accent-2:#06b6d4;    /* cyan-500 */
+      --danger:#ef4444;      /* red-500 */
+      --warn:#f59e0b;        /* amber-500 */
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{box-sizing: border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1000px 600px at 20% -10%, rgba(34,197,94,.15), transparent 60%),
+                  radial-gradient(1000px 700px at 120% -20%, rgba(6,182,212,.15), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{
+      position:sticky; top:0; z-index:10; backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(15,23,42,.9), rgba(15,23,42,.7));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .container{ max-width:1200px; margin:0 auto; padding: 18px 20px; }
+    .title{
+      display:flex; align-items:center; gap:14px; font-weight:700; letter-spacing:.3px;
+    }
+    .title .logo{
+      width:44px; height:44px; display:grid; place-items:center; border-radius:14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 30px rgba(6,182,212,.35);
+      font-weight:900; color:white;
+    }
+    .subtitle{ color:var(--text-dim); font-size:.95rem; }
+
+    .grid{ display:grid; grid-template-columns: 1fr; gap:16px; }
+    @media(min-width:980px){ .grid{ grid-template-columns: 1.2fr 2fr; } }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card h3{ margin:0 0 8px; font-size:1.05rem; letter-spacing:.3px }
+    .card .body{ padding:16px; }
+
+    .row{ display:grid; grid-template-columns:1fr; gap:12px }
+    @media(min-width:700px){ .row.two{ grid-template-columns:1fr 1fr }
+                             .row.three{ grid-template-columns:1fr 1fr 1fr } }
+
+    label{ font-size:.85rem; color:var(--text-dim); margin-bottom:6px; display:block }
+    input, select{ width:100%; background: var(--muted); border:1px solid rgba(255,255,255,.08); color:var(--text);
+                   padding:12px 12px; border-radius:12px; outline:none; transition:.2s border }
+    input:focus, select:focus{ border-color: var(--accent) }
+
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    button{ border:0; padding:12px 14px; border-radius:12px; font-weight:600; cursor:pointer; transition:.2s transform, .2s opacity }
+    button:active{ transform: translateY(1px) }
+    .btn-primary{ background: linear-gradient(135deg, var(--accent), #16a34a); color:#06251a }
+    .btn-secondary{ background: linear-gradient(135deg, var(--accent-2), #0891b2); color:#062029 }
+    .btn-ghost{ background: transparent; border: 1px solid rgba(255,255,255,.14); color:var(--text) }
+    .btn-danger{ background: linear-gradient(135deg, var(--danger), #b91c1c); color:#2b0a0a }
+
+    .toolbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+    .toolbar input, .toolbar select{ height:42px }
+    .spacer{ flex:1 }
+
+    table{ width:100%; border-collapse:separate; border-spacing:0 10px }
+    thead th{ text-align:left; font-size:.8rem; color:var(--text-dim); font-weight:700; padding:0 10px }
+    tbody tr{ background: var(--card); border:1px solid rgba(255,255,255,.06) }
+    tbody td{ padding:14px 10px; border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06) }
+    tbody tr td:first-child{ border-left:1px solid rgba(255,255,255,.06); border-top-left-radius:12px; border-bottom-left-radius:12px }
+    tbody tr td:last-child{  border-right:1px solid rgba(255,255,255,.06); border-top-right-radius:12px; border-bottom-right-radius:12px }
+    .pill{ padding:6px 10px; border-radius:999px; font-weight:700; font-size:.75rem; display:inline-block }
+    .pill.green{ background: rgba(34,197,94,.15); color:#22c55e; border:1px solid rgba(34,197,94,.3) }
+    .pill.gray{ background: rgba(148,163,184,.12); color:#cbd5e1; border:1px solid rgba(148,163,184,.25) }
+
+    .empty{
+      text-align:center; color:var(--text-dim); padding:28px; border:1px dashed rgba(255,255,255,.18); border-radius:16px;
+    }
+
+    footer{ text-align:center; color:var(--text-dim); padding:30px 0 }
+    .link{ color:var(--accent-2); text-decoration:none }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="title">
+        <div class="logo">EM</div>
+        <div>
+          <div style="font-size:1.3rem">Employee Management</div>
+          <div class="subtitle">Lightweight, client‑side HR dashboard — add, search, sort, edit & export employees. Data is saved locally in your browser.</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:20px; padding-bottom:30px">
+    <div class="grid">
+      <!-- Form Card -->
+      <section class="card">
+        <div class="body">
+          <h3 id="form-title">Add Employee</h3>
+          <form id="emp-form">
+            <input type="hidden" id="emp-id" />
+
+            <div class="row two">
+              <div>
+                <label for="name">Full Name</label>
+                <input id="name" placeholder="Jane Doe" required />
+              </div>
+              <div>
+                <label for="email">Email</label>
+                <input id="email" type="email" placeholder="jane@company.com" required />
+              </div>
+            </div>
+
+            <div class="row two">
+              <div>
+                <label for="dept">Department</label>
+                <input id="dept" placeholder="Engineering / Sales / HR" required />
+              </div>
+              <div>
+                <label for="role">Role</label>
+                <input id="role" placeholder="Senior Developer" required />
+              </div>
+            </div>
+
+            <div class="row two">
+              <div>
+                <label for="salary">Salary (₹)</label>
+                <input id="salary" type="number" min="0" step="1" placeholder="1200000" required />
+              </div>
+              <div>
+                <label for="doj">Date of Joining</label>
+                <input id="doj" type="date" required />
+              </div>
+            </div>
+
+            <div class="row two">
+              <div>
+                <label for="status">Employment Status</label>
+                <select id="status">
+                  <option value="Active">Active</option>
+                  <option value="On Leave">On Leave</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              <div>
+                <label for="notes">Notes</label>
+                <input id="notes" placeholder="Optional" />
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:14px">
+              <button class="btn-primary" type="submit" id="save-btn">Save Employee</button>
+              <button class="btn-ghost" type="button" id="reset-btn">Reset</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Table Card -->
+      <section class="card">
+        <div class="body">
+          <div class="toolbar" style="margin-bottom:12px">
+            <input id="search" placeholder="Search name, email, department…" />
+            <select id="filter-dept">
+              <option value="">All Departments</option>
+            </select>
+            <select id="filter-status">
+              <option value="">All Status</option>
+              <option>Active</option>
+              <option>On Leave</option>
+              <option>Inactive</option>
+            </select>
+            <div class="spacer"></div>
+            <input type="file" id="import-file" accept=".csv" style="display:none" />
+            <button class="btn-secondary" id="export-btn" title="Download CSV">Export</button>
+            <button class="btn-ghost" id="import-btn" title="Import from CSV">Import</button>
+            <button class="btn-danger" id="clear-btn" title="Clear all employees">Clear</button>
+          </div>
+
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th data-sort="name">Name ▲▼</th>
+                  <th data-sort="email">Email ▲▼</th>
+                  <th data-sort="dept">Department ▲▼</th>
+                  <th data-sort="role">Role ▲▼</th>
+                  <th data-sort="salary">Salary ▲▼</th>
+                  <th data-sort="doj">Joined ▲▼</th>
+                  <th data-sort="status">Status ▲▼</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+
+          <div id="empty" class="empty" style="display:none">No employees yet. Add your first employee using the form on the left.</div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <small>Made for you • Works offline • <a class="link" href="#" id="seed">Add sample data</a></small>
+    </footer>
+  </main>
+
+  <script>
+    // --- Utilities ---
+    const $ = (q) => document.querySelector(q);
+    const $$ = (q) => Array.from(document.querySelectorAll(q));
+    const fmt = new Intl.NumberFormat('en-IN');
+    const storeKey = 'employees.v1';
+    const readStore = () => JSON.parse(localStorage.getItem(storeKey) || '[]');
+    const writeStore = (arr) => localStorage.setItem(storeKey, JSON.stringify(arr));
+    const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+    const state = {
+      employees: [],
+      sortBy: 'name',
+      sortDir: 'asc',
+      q: '',
+      fDept: '',
+      fStatus: ''
+    };
+
+    // --- Seed data ---
+    const sample = [
+      { name:'Aarav Sharma', email:'aarav@company.com', dept:'Engineering', role:'SDE II', salary:1800000, doj:'2022-07-01', status:'Active', notes:'' },
+      { name:'Isha Patel', email:'isha@company.com', dept:'HR', role:'HR Manager', salary:1200000, doj:'2021-03-15', status:'On Leave', notes:'Maternity leave' },
+      { name:'Rahul Verma', email:'rahul@company.com', dept:'Sales', role:'Account Exec', salary:1500000, doj:'2020-10-10', status:'Active', notes:'' },
+      { name:'Neha Gupta', email:'neha@company.com', dept:'Finance', role:'Analyst', salary:1100000, doj:'2023-05-08', status:'Inactive', notes:'Resigned' }
+    ];
+
+    // --- DOM refs ---
+    const form = $('#emp-form');
+    const formTitle = $('#form-title');
+    const empId = $('#emp-id');
+    const nameI = $('#name');
+    const emailI = $('#email');
+    const deptI = $('#dept');
+    const roleI = $('#role');
+    const salaryI = $('#salary');
+    const dojI = $('#doj');
+    const statusI = $('#status');
+    const notesI = $('#notes');
+
+    const tbody = $('#tbody');
+    const empty = $('#empty');
+
+    const searchI = $('#search');
+    const fDeptI = $('#filter-dept');
+    const fStatusI = $('#filter-status');
+
+    const importBtn = $('#import-btn');
+    const importFile = $('#import-file');
+    const exportBtn = $('#export-btn');
+    const clearBtn = $('#clear-btn');
+    const resetBtn = $('#reset-btn');
+
+    // --- Init ---
+    function init(){
+      state.employees = readStore();
+      if(!state.employees.length){
+        // leave empty; user can click seed
+      }
+      rebuildFilters();
+      render();
+    }
+
+    function rebuildFilters(){
+      const depts = Array.from(new Set(state.employees.map(e => e.dept))).sort();
+      fDeptI.innerHTML = '<option value="">All Departments</option>' + depts.map(d=>`<option>${escapeHtml(d)}</option>`).join('');
+    }
+
+    // --- Render ---
+    function render(){
+      const filtered = state.employees.filter(e => {
+        const hit = `${e.name} ${e.email} ${e.dept} ${e.role}`.toLowerCase().includes(state.q);
+        const deptOk = !state.fDept || e.dept === state.fDept;
+        const statOk = !state.fStatus || e.status === state.fStatus;
+        return hit && deptOk && statOk;
+      }).sort((a,b)=> cmp(a,b,state.sortBy,state.sortDir));
+
+      tbody.innerHTML = '';
+      if(!filtered.length){ empty.style.display='block'; return } else { empty.style.display='none' }
+
+      for(const e of filtered){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(e.name)}</td>
+          <td>${escapeHtml(e.email)}</td>
+          <td>${escapeHtml(e.dept)}</td>
+          <td>${escapeHtml(e.role)}</td>
+          <td>₹ ${fmt.format(Number(e.salary||0))}</td>
+          <td>${escapeHtml(e.doj)}</td>
+          <td>${pill(e.status)}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-ghost" data-edit="${e.id}">Edit</button>
+              <button class="btn-danger" data-del="${e.id}">Delete</button>
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      }
+
+      // attach row actions
+      $$('[data-edit]').forEach(btn => btn.onclick = () => editEmployee(btn.dataset.edit));
+      $$('[data-del]').forEach(btn => btn.onclick = () => delEmployee(btn.dataset.del));
+    }
+
+    function pill(status){
+      const cls = status === 'Active' ? 'green' : 'gray';
+      return `<span class="pill ${cls}">${escapeHtml(status)}</span>`;
+    }
+
+    function cmp(a,b,key,dir){
+      let va=a[key], vb=b[key];
+      if(key==='salary') { va=Number(va||0); vb=Number(vb||0) }
+      const res = (va>vb) - (va<vb);
+      return dir==='asc'? res : -res;
+    }
+
+    function escapeHtml(s){
+      return String(s??'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+
+    // --- CRUD ---
+    function upsertEmployee(obj){
+      const idx = state.employees.findIndex(e=> e.id === obj.id);
+      if(idx>=0) state.employees[idx] = obj; else state.employees.push(obj);
+      writeStore(state.employees);
+      rebuildFilters();
+      render();
+      form.reset();
+      empId.value='';
+      formTitle.textContent='Add Employee';
+      $('#save-btn').textContent='Save Employee';
+    }
+
+    function editEmployee(id){
+      const e = state.employees.find(x=>x.id===id);
+      if(!e) return;
+      empId.value = e.id;
+      nameI.value = e.name; emailI.value = e.email; deptI.value = e.dept; roleI.value = e.role;
+      salaryI.value = e.salary; dojI.value = e.doj; statusI.value = e.status; notesI.value = e.notes||'';
+      formTitle.textContent='Edit Employee';
+      $('#save-btn').textContent='Update Employee';
+      nameI.focus();
+    }
+
+    function delEmployee(id){
+      if(!confirm('Delete this employee?')) return;
+      state.employees = state.employees.filter(e=> e.id!==id);
+      writeStore(state.employees);
+      rebuildFilters();
+      render();
+    }
+
+    function clearAll(){
+      if(!state.employees.length) return alert('Nothing to clear.');
+      if(!confirm('This will remove all employees. Continue?')) return;
+      state.employees = [];
+      writeStore(state.employees);
+      rebuildFilters();
+      render();
+    }
+
+    // --- CSV ---
+    function toCSV(rows){
+      const headers = ['name','email','dept','role','salary','doj','status','notes'];
+      const escape = (v) => '"' + String(v??'').replace(/"/g,'""') + '"';
+      const lines = [headers.join(',')];
+      for(const r of rows){ lines.push(headers.map(h=>escape(r[h])).join(',')); }
+      return lines.join('\n');
+    }
+
+    function download(filename, text){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], {type:'text/csv'}));
+      a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+    }
+
+    function parseCSV(text){
+      // Minimal CSV parser: handles quoted fields and commas
+      const rows=[]; let row=[]; let cur=''; let q=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(q){
+          if(ch==='"' && text[i+1]==='"'){ cur+='"'; i++; }
+          else if(ch==='"'){ q=false; }
+          else cur+=ch;
+        } else {
+          if(ch==='"') q=true;
+          else if(ch===','){ row.push(cur); cur=''; }
+          else if(ch==='\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else cur+=ch;
+        }
+      }
+      if(cur.length || row.length){ row.push(cur); rows.push(row); }
+      return rows;
+    }
+
+    // --- Events ---
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // basic validation
+      if(!nameI.value.trim()) return alert('Name is required');
+      if(!emailI.value.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailI.value)) return alert('Valid email required');
+      if(!deptI.value.trim()) return alert('Department is required');
+      if(!roleI.value.trim()) return alert('Role is required');
+
+      const emp = {
+        id: empId.value || uid(),
+        name: nameI.value.trim(),
+        email: emailI.value.trim(),
+        dept: deptI.value.trim(),
+        role: roleI.value.trim(),
+        salary: Number(salaryI.value||0),
+        doj: dojI.value,
+        status: statusI.value,
+        notes: notesI.value.trim()
+      };
+      upsertEmployee(emp);
+    });
+
+    resetBtn.onclick = () => { form.reset(); empId.value=''; formTitle.textContent='Add Employee'; $('#save-btn').textContent='Save Employee'; }
+
+    searchI.addEventListener('input', ()=>{ state.q = searchI.value.toLowerCase().trim(); render(); });
+    fDeptI.addEventListener('change', ()=>{ state.fDept = fDeptI.value; render(); });
+    fStatusI.addEventListener('change', ()=>{ state.fStatus = fStatusI.value; render(); });
+
+    $$('th[data-sort]').forEach(th => th.style.cursor='pointer');
+    $$('th[data-sort]').forEach(th => th.addEventListener('click', ()=>{
+      const key = th.getAttribute('data-sort');
+      if(state.sortBy===key){ state.sortDir = state.sortDir==='asc'?'desc':'asc' } else { state.sortBy=key; state.sortDir='asc' }
+      render();
+    }));
+
+    exportBtn.onclick = ()=>{
+      const csv = toCSV(state.employees);
+      download('employees.csv', csv);
+    }
+
+    importBtn.onclick = ()=> importFile.click();
+    importFile.onchange = async (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const text = await file.text();
+      const rows = parseCSV(text);
+      const [header, ...data] = rows;
+      const idx = (h) => header.indexOf(h);
+      const required = ['name','email','dept','role','salary','doj','status'];
+      const ok = required.every(h => idx(h)>=0);
+      if(!ok) return alert('CSV missing required headers: ' + required.join(', '));
+      const imported = data.filter(r=>r.length).map(r => ({
+        id: uid(),
+        name: r[idx('name')],
+        email: r[idx('email')],
+        dept: r[idx('dept')],
+        role: r[idx('role')],
+        salary: Number(r[idx('salary')]||0),
+        doj: r[idx('doj')],
+        status: r[idx('status')],
+        notes: idx('notes')>=0 ? r[idx('notes')] : ''
+      }));
+      state.employees = state.employees.concat(imported);
+      writeStore(state.employees);
+      rebuildFilters();
+      render();
+      importFile.value = '';
+    }
+
+    clearBtn.onclick = clearAll;
+
+    $('#seed').onclick = (e)=>{
+      e.preventDefault();
+      if(state.employees.length && !confirm('Add sample employees to existing list?')) return;
+      const seeded = sample.map(s => ({...s, id: uid()}));
+      state.employees = state.employees.concat(seeded);
+      writeStore(state.employees);
+      rebuildFilters();
+      render();
+    }
+
+    // Kickoff
+    init();
+  </script>
+</body>
+</html>
